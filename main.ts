@@ -124,13 +124,6 @@ namespace RibBit {
         December = 12
     }
 
-    export function ribbit_mBus_en(state: boolean) {
-        if (state)
-            ribbit_cmd( Device.MBUS, Command.POWER_ENABLE )
-        else
-            ribbit_cmd( Device.MBUS, Command.POWER_DISABLE )
-    }
-
     export function ribbit_cmd(device: Device, command: Command) {
         const payload = Buffer.create(2)
         payload.setUint8(0, command);
