@@ -1,6 +1,7 @@
 namespace RibBit {
     const IRQPin = DigitalPin.P8;
-    const RIBBIT_ADDRESS = 0x10;
+    export const RIBBIT_ADDRESS = 0x10;
+    export const RIBBIT_RTC_ADDRESS = 0x68;
 
     export enum OnOff {
         //% block="off"
@@ -52,6 +53,29 @@ namespace RibBit {
         CAMERA = 0x03,
         LORA = 0x04,
         SD = 0x05
+    }
+
+    export enum DayOfWeek {
+        //% block="Monday"
+        Monday    = 1,
+
+        //% block="Tuesday"
+        Tuesday   = 2,
+
+        //% block="Wednesday"
+        Wednesday = 3,
+
+        //% block="Thursday"
+        Thursday  = 4,
+
+        //% block="Friday"
+        Friday    = 5,
+
+        //% block="Saturday"
+        Saturday  = 6,
+
+        //% block="Sunday"
+        Sunday    = 7
     }
 
     export enum ButtonState {
@@ -114,6 +138,27 @@ namespace RibBit {
         pins.i2cWriteBuffer(RIBBIT_ADDRESS, payload)
     }
 
+    export function bcdToDec(bcd: number): number {
+        return ((bcd >> 4) * 10) + (bcd & 0x0F)
+    }
+
+    export function decToBcd(dec: number): number {
+        return ((Math.idiv(dec, 10) << 4) | (dec % 10))
+    }
+
+    export function dayToString( day: number = 1 ): string {
+        switch( day ) {
+            case DayOfWeek.Monday:    return "Monday";
+            case DayOfWeek.Tuesday:   return "Tuesday";
+            case DayOfWeek.Wednesday: return "Wednesday";
+            case DayOfWeek.Thursday:  return "Thursday";
+            case DayOfWeek.Friday:    return "Friday";
+            case DayOfWeek.Saturday:  return "Saturday";
+            case DayOfWeek.Sunday:    return "Sunday";
+        }
+        return "???";
+    }
+
     // Event Handlers
     export const buttonPressHandlers: Array<() => void> = [undefined, undefined, undefined, undefined, undefined, undefined];
     export const buttonReleaseHandlers: Array<() => void> = [undefined, undefined, undefined, undefined, undefined, undefined];
@@ -132,7 +177,6 @@ namespace RibBit {
 
     pins.setPull(IRQPin, PinPullMode.PullUp);
     control.inBackground(() => {
-
         while (true) {
             // Do we have any pending interrupts?
             if (pins.digitalReadPin(IRQPin) == 0) {
@@ -176,6 +220,7 @@ namespace RibBit {
                     }
                 }
             }
+
             basic.pause(10);
         }
     });
@@ -184,7 +229,7 @@ namespace RibBit {
 //% block="Rib:Bit Basics"
 //% color="#3ecb21"
 //% icon="\u26A0"
-//% groups=[ "Buttons", "Lights", "Time" ]
+//% groups=[ "Buttons", "Lights", "Time", "Extra" ]
 namespace RibBitBasics {
 
     //% blockId="button_type"
@@ -268,79 +313,168 @@ namespace RibBitBasics {
     //% block="the current time \u26A0"
     //% group="Time"
     export function getTime(): string {
-        return "hh:mm:ss";
+        pins.i2cWriteNumber(RibBit.RIBBIT_RTC_ADDRESS, 0x00, NumberFormat.UInt8BE, true); // Seconds register
+        let data = pins.i2cReadBuffer(RibBit.RIBBIT_RTC_ADDRESS, 3)
+
+        let seconds = RibBit.bcdToDec(data[0]);
+        let minutes = RibBit.bcdToDec(data[1]);
+        let hours = RibBit.bcdToDec(data[2] & 0x3F);
+
+        return `${"0" + (hours).toString().slice(-2)}:${"0" + minutes.toString().slice(-2)}:${"0" + seconds.toString().slice(-2)}`;
     }
 
     //% block="the current date \u26A0"
     //% group="Time"
     export function getDate(): string {
-        return "YYYY:MM:DD";
+        pins.i2cWriteNumber(RibBit.RIBBIT_RTC_ADDRESS, 0x04, NumberFormat.UInt8BE, true); // Date register
+        let data = pins.i2cReadBuffer(RibBit.RIBBIT_RTC_ADDRESS, 3)
+
+        let date = RibBit.bcdToDec(data[0]);
+        let month = RibBit.bcdToDec(data[1]);
+        let year = 2000 + RibBit.bcdToDec(data[2]);
+
+        return `${year}-${month}-${date}`
+    }
+
+    //% block="the current weekday \u26A0"
+    //% group="Time"
+    export function getDayOfWeek(): string {
+        pins.i2cWriteNumber(RibBit.RIBBIT_RTC_ADDRESS, 0x03, NumberFormat.UInt8BE, true); // Days register
+        let day = pins.i2cReadNumber(RibBit.RIBBIT_RTC_ADDRESS, NumberFormat.UInt8BE);
+
+        return RibBit.dayToString(day & 0x07);
     }
 
     //% block="the hour \u26A0"
     //% group="Time"
     //% advanced="true"
     export function getHour(): number {
-        return 0;
+        pins.i2cWriteNumber(RibBit.RIBBIT_RTC_ADDRESS, 0x02, NumberFormat.UInt8BE, true); // Hours register
+        return RibBit.bcdToDec(pins.i2cReadNumber(RibBit.RIBBIT_RTC_ADDRESS, NumberFormat.UInt8BE) & 0x3F);
     }
 
     //% block="the minute \u26A0"
     //% group="Time"
     //% advanced="true"
     export function getMinute(): number {
-        return 0;
+        pins.i2cWriteNumber(RibBit.RIBBIT_RTC_ADDRESS, 0x01, NumberFormat.UInt8BE, true); // Minutes register
+        return RibBit.bcdToDec(pins.i2cReadNumber(RibBit.RIBBIT_RTC_ADDRESS, NumberFormat.UInt8BE));
     }
 
     //% block="the second \u26A0"
     //% group="Time"
     //% advanced="true"
     export function getSecond(): number {
-        return 0;
+        pins.i2cWriteNumber(RibBit.RIBBIT_RTC_ADDRESS, 0x00, NumberFormat.UInt8BE, true); // Seconds register
+        return RibBit.bcdToDec(pins.i2cReadNumber(RibBit.RIBBIT_RTC_ADDRESS, NumberFormat.UInt8BE));
     }
 
     //% block="the year \u26A0"
     //% group="Time"
     //% advanced="true"
     export function getYear(): number {
-        return 0;
+        pins.i2cWriteNumber(RibBit.RIBBIT_RTC_ADDRESS, 0x06, NumberFormat.UInt8BE, true); // Years register
+        return 2000 + RibBit.bcdToDec(pins.i2cReadNumber(RibBit.RIBBIT_RTC_ADDRESS, NumberFormat.UInt8BE));
     }
 
     //% block="the month \u26A0"
     //% group="Time"
     //% advanced="true"
     export function getMonth(): RibBit.Month {
-        return RibBit.Month.January;
+        pins.i2cWriteNumber(RibBit.RIBBIT_RTC_ADDRESS, 0x05, NumberFormat.UInt8BE, true); // Months register
+        return RibBit.bcdToDec(pins.i2cReadNumber(RibBit.RIBBIT_RTC_ADDRESS, NumberFormat.UInt8BE));
     }
 
-    //% block="the year \u26A0"
+    //% block="the date \u26A0"
     //% group="Time"
     //% advanced="true"
-    export function getDay(): number {
-        return 0;
+    export function getDayOfMonth(): number {
+        pins.i2cWriteNumber(RibBit.RIBBIT_RTC_ADDRESS, 0x04, NumberFormat.UInt8BE, true); // Hours register
+        return RibBit.bcdToDec(pins.i2cReadNumber(RibBit.RIBBIT_RTC_ADDRESS, NumberFormat.UInt8BE));
     }
 
+    //% blockId="ribbit_month_var"
     //% block="$month"
     //% group="Time"
-    //% advanced="true"
-    export function month( month: RibBit.Month = RibBit.Month.January ): RibBit.Month {
+    export function monthVar( month: RibBit.Month = RibBit.Month.January ): RibBit.Month {
         return month;
     }
 
-    //% block="Set the clock to $hour:$minute:$second (hh:mm:ss) \u26A0"
+    //% blockId="ribbit_day_var"
+    //% block="$day"
     //% group="Time"
-    export function setTime( hour: number = 0, minute: number = 0, second: number = 0 ): void {
-        return;
+    export function dayVar( day: RibBit.DayOfWeek = RibBit.DayOfWeek.Monday): RibBit.DayOfWeek {
+        return day;
     }
 
-    //% block="Set the date to $year:$month:$day (yyyy:mm:dd) \u26A0"
+    //% blockId="ribbit_set_time"
+    //% block="Set the clock to $hour-$minute-$second (hh:mm:ss) \u26A0"
     //% group="Time"
-    //% draggableParameters="reporter"
-    //% month.shadow="month"
-    //% day.min=1
-    //% year.defl 2000
-    export function setDate( year: number = 2000, month: RibBit.Month = RibBit.Month.January, day: number = 1 ): void {
-        return;
+    export function setTime( hour: number = 0, minute: number = 0, second: number = 0 ): void {
+        let buf = Buffer.fromArray([
+            0x00,
+            RibBit.decToBcd(second),
+            RibBit.decToBcd(minute),
+            RibBit.decToBcd(hour) & 0x3F           // 24-hour mode
+        ]);
+        pins.i2cWriteBuffer(RibBit.RIBBIT_RTC_ADDRESS, buf)
     }
+
+    //% blockId="ribbit_set_date"
+    //% block="Set the date to $year-$month-$day (yy:mm:dd)"
+    //% group="Time"
+    //% year.min=2000
+    //% month.shadow="ribbit_month_var"
+    export function setDate( year: number = 2000, month: number = 1, day: number = 1 ): void {
+        let buf = Buffer.fromArray([
+            0x04,
+            RibBit.decToBcd(day),
+            RibBit.decToBcd(month),
+            RibBit.decToBcd(year - 2000)
+        ]);
+        pins.i2cWriteBuffer(RibBit.RIBBIT_RTC_ADDRESS, buf);
+    }
+
+    //% blockId="ribbit_set_day_of_week"
+    //% block="Set the day of the week to $day"
+    //% group="Time"
+    //% day.shadow="ribbit_day_var"
+    export function setDayOfWeek( day: number = 1 ): void {
+        let buf = Buffer.fromArray([
+            0x03,
+            RibBit.decToBcd(day)
+        ]);
+        pins.i2cWriteBuffer(RibBit.RIBBIT_RTC_ADDRESS, buf);
+    }
+
+    //% blockId="ribbit_read_temperature"
+    //% block="read RTC temperature in °C"
+    //% group="Extra"
+    //% advanced="true"
+    export function readTemperature(): number {
+        const TEMP_MSB = 0x11
+        const TEMP_LSB = 0x12
+
+        // Tell the RTC we want to read from 0x11
+        pins.i2cWriteNumber(RibBit.RIBBIT_RTC_ADDRESS, TEMP_MSB, NumberFormat.UInt8BE, true)
+
+        // Read two bytes
+        let buf = pins.i2cReadBuffer(RibBit.RIBBIT_RTC_ADDRESS, 2)
+
+        let msb = buf[0]      // signed integer
+        let lsb = buf[1]      // fractional part in bits 7–6
+
+        // Convert MSB to signed number (8-bit two's complement)
+        if (msb & 0x80) {
+            msb = msb - 0x100
+        }
+
+        // Fractional part: each bit = 0.25°C
+        let fraction = (lsb >> 6) * 0.25
+
+        return msb + fraction
+    }
+
 }
 
 //% block="Rib:Bit Camera"
@@ -350,7 +484,10 @@ namespace RibBitBasics {
 namespace RibBitCamera {
     //% block="switch camera $state \u26A0"
     export function switchCamera(state: RibBit.OnOff = RibBit.OnOff.On): void {
-        return
+        if( state == RibBit.OnOff.On )
+            return RibBit.ribbit_cmd( RibBit.Device.CAMERA, RibBit.Command.POWER_ENABLE )
+        
+        return RibBit.ribbit_cmd(RibBit.Device.CAMERA, RibBit.Command.POWER_DISABLE);
     }
 }
 
