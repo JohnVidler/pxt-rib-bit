@@ -166,8 +166,8 @@ namespace RibBit {
 
     // Internal States
     const _powerState        = [ true, true, false, false, false, true ];  // Offsets map to the Device enum
-    const _oldButtonState    = [false, false, false, false, false, false]; // Offsets map to the Button enum
-    export const buttonState = [false, false, false, false, false, false]; // Offsets map to the Button enum
+    const _oldButtonState    = [ false, false, false, false, false, false ]; // Offsets map to the Button enum
+    export const buttonState = [ false, false, false, false, false, false ]; // Offsets map to the Button enum
 
     // Neopixel Configuration
     export const leds = neopixel.create(DigitalPin.P16, 6, NeoPixelMode.RGB);
@@ -248,18 +248,21 @@ namespace RibBitBasics {
         return state == RibBit.ButtonState.Pressed;
     }
 
+    //% blockId="ribbit_on_button_pressed"
     //% block="when $button is pressed"
     //% group="Buttons"
     export function onButtonPress( button: RibBit.Button, cb: () => void ): void {
         RibBit.buttonPressHandlers[button] = cb;
     }
 
+    //% blockId="ribbit_on_button_released"
     //% block="when $button is released"
     //% group="Buttons"
     export function onButtonRelease( button: RibBit.Button, cb: () => void ): void {
         RibBit.buttonReleaseHandlers[button] = cb;
     }
 
+    //% blockId="ribbit_on_button_event"
     //% block="when any button changes state"
     //% draggableParameters="reporter"
     //% state.shadow="button_state"
@@ -269,6 +272,7 @@ namespace RibBitBasics {
         RibBit.buttonEventHandler = cb;
     }
 
+    //% blockId="ribbit_is_button_state"
     //% block="is %button currently $state"
     //% button.shadow=button_type
     //% group="Buttons"
@@ -277,6 +281,7 @@ namespace RibBitBasics {
         return RibBit.buttonState[b] == (state == RibBit.ButtonState.Pressed ? true : false);
     }
 
+    //% blockId="ribbit_set_led_color"
     //% block="set %button to %color"
     //% button.shadow=button_type
     //% group="Lights"
@@ -286,6 +291,7 @@ namespace RibBitBasics {
         RibBit.leds.show();
     }
 
+    //% blockId="ribbit_set_all_led_color"
     //% block="set every light to %color"
     //% group="Lights"
     export function setAllLedColor( color: NeoPixelColors ): void {
@@ -294,6 +300,7 @@ namespace RibBitBasics {
         RibBit.leds.show();
     }
 
+    //% blockId="ribbit_set_light_brightness"
     //% block="set light brightness to $brightness"
     //% brightness.min=0
     //% brightness.max=255
@@ -303,6 +310,7 @@ namespace RibBitBasics {
         RibBit.leds.show();
     }
 
+    //% blockId="ribbit_neopixel_strip"
     //% block="neopixel strip"
     //% group="Lights"
     //% advanced="true"
@@ -310,7 +318,8 @@ namespace RibBitBasics {
         return RibBit.leds;
     }
 
-    //% block="the current time \u26A0"
+    //% blockId="ribbit_get_time"
+    //% block="the current time"
     //% group="Time"
     export function getTime(): string {
         pins.i2cWriteNumber(RibBit.RIBBIT_RTC_ADDRESS, 0x00, NumberFormat.UInt8BE, true); // Seconds register
@@ -323,7 +332,8 @@ namespace RibBitBasics {
         return `${"0" + (hours).toString().slice(-2)}:${"0" + minutes.toString().slice(-2)}:${"0" + seconds.toString().slice(-2)}`;
     }
 
-    //% block="the current date \u26A0"
+    //% blockId="ribbit_get_date"
+    //% block="the current date"
     //% group="Time"
     export function getDate(): string {
         pins.i2cWriteNumber(RibBit.RIBBIT_RTC_ADDRESS, 0x04, NumberFormat.UInt8BE, true); // Date register
@@ -336,7 +346,8 @@ namespace RibBitBasics {
         return `${year}-${month}-${date}`
     }
 
-    //% block="the current weekday \u26A0"
+    //% blockId="ribbit_get_day_of_week"
+    //% block="the current weekday"
     //% group="Time"
     export function getDayOfWeek(): string {
         pins.i2cWriteNumber(RibBit.RIBBIT_RTC_ADDRESS, 0x03, NumberFormat.UInt8BE, true); // Days register
@@ -345,7 +356,8 @@ namespace RibBitBasics {
         return RibBit.dayToString(day & 0x07);
     }
 
-    //% block="the hour \u26A0"
+    //% blockId="ribbit_the_hour"
+    //% block="the hour"
     //% group="Time"
     //% advanced="true"
     export function getHour(): number {
@@ -353,7 +365,8 @@ namespace RibBitBasics {
         return RibBit.bcdToDec(pins.i2cReadNumber(RibBit.RIBBIT_RTC_ADDRESS, NumberFormat.UInt8BE) & 0x3F);
     }
 
-    //% block="the minute \u26A0"
+    //% blockId="ribbit_the_minute"
+    //% block="the minute"
     //% group="Time"
     //% advanced="true"
     export function getMinute(): number {
@@ -361,7 +374,8 @@ namespace RibBitBasics {
         return RibBit.bcdToDec(pins.i2cReadNumber(RibBit.RIBBIT_RTC_ADDRESS, NumberFormat.UInt8BE));
     }
 
-    //% block="the second \u26A0"
+    //% blockId="ribbit_the_second"
+    //% block="the second"
     //% group="Time"
     //% advanced="true"
     export function getSecond(): number {
@@ -369,7 +383,8 @@ namespace RibBitBasics {
         return RibBit.bcdToDec(pins.i2cReadNumber(RibBit.RIBBIT_RTC_ADDRESS, NumberFormat.UInt8BE));
     }
 
-    //% block="the year \u26A0"
+    //% blockId="ribbit_the_year"
+    //% block="the year"
     //% group="Time"
     //% advanced="true"
     export function getYear(): number {
@@ -377,7 +392,8 @@ namespace RibBitBasics {
         return 2000 + RibBit.bcdToDec(pins.i2cReadNumber(RibBit.RIBBIT_RTC_ADDRESS, NumberFormat.UInt8BE));
     }
 
-    //% block="the month \u26A0"
+    //% blockId="ribbit_the_month"
+    //% block="the month"
     //% group="Time"
     //% advanced="true"
     export function getMonth(): RibBit.Month {
@@ -385,7 +401,8 @@ namespace RibBitBasics {
         return RibBit.bcdToDec(pins.i2cReadNumber(RibBit.RIBBIT_RTC_ADDRESS, NumberFormat.UInt8BE));
     }
 
-    //% block="the date \u26A0"
+    //% blockId="ribbit_the_date"
+    //% block="the date"
     //% group="Time"
     //% advanced="true"
     export function getDayOfMonth(): number {
@@ -475,20 +492,6 @@ namespace RibBitBasics {
         return msb + fraction
     }
 
-}
-
-//% block="Rib:Bit Camera"
-//% color="#6d41a4"
-//% icon="\u26A0"
-//% groups=[]
-namespace RibBitCamera {
-    //% block="switch camera $state \u26A0"
-    export function switchCamera(state: RibBit.OnOff = RibBit.OnOff.On): void {
-        if( state == RibBit.OnOff.On )
-            return RibBit.ribbit_cmd( RibBit.Device.CAMERA, RibBit.Command.POWER_ENABLE )
-        
-        return RibBit.ribbit_cmd(RibBit.Device.CAMERA, RibBit.Command.POWER_DISABLE);
-    }
 }
 
 //% block="Rib:Bit LoRa Radio"
