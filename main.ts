@@ -157,6 +157,8 @@ namespace RibBit {
     export const buttonReleaseHandlers: Array<() => void> = [undefined, undefined, undefined, undefined, undefined, undefined];
     export let buttonEventHandler: (button: Button, state: boolean) => void = () => {};
 
+    export let __nmeaString: ( text: string ) => void = () => {};
+
     // Internal States
     const _powerState        = [ true, true, false, false, false, true ];  // Offsets map to the Device enum
     const _oldButtonState    = [ false, false, false, false, false, false ]; // Offsets map to the Button enum
@@ -191,6 +193,7 @@ namespace RibBit {
                         const length = data.getUint8(1);
                         const text = data.slice(2, 2 + length).toString();
                         serial.writeLine(`GPS ${length}: ${text}`);
+                        try { __nmeaString(text); } catch( err ) { /* ignore any handler errors */ }
                         break;
 
                     default:
