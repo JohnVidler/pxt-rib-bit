@@ -192,7 +192,6 @@ namespace RibBit {
                     case IRQ.GPS:
                         const length = data.getUint8(1);
                         const text = data.slice(2, 2 + length).toString();
-                        serial.writeLine(`GPS ${length}: ${text}`);
                         try { __nmeaString(text); } catch( err ) { /* ignore any handler errors */ }
                         break;
 
