@@ -182,9 +182,9 @@ namespace RibBit {
                         buttonState[0] = (data.getUint8(1) & 0x01) == 0x01; // L1
                         buttonState[1] = (data.getUint8(1) & 0x02) == 0x02; // L2
                         buttonState[2] = (data.getUint8(1) & 0x04) == 0x04; // L3
-                        buttonState[3] = (data.getUint8(1) & 0x20) == 0x20; // R1
+                        buttonState[3] = (data.getUint8(1) & 0x08) == 0x08; // R1
                         buttonState[4] = (data.getUint8(1) & 0x10) == 0x10; // R2
-                        buttonState[5] = (data.getUint8(1) & 0x08) == 0x08; // R3
+                        buttonState[5] = (data.getUint8(1) & 0x20) == 0x20; // R3
 
                         serial.writeLine( buttonState.join(", ") );
                         break;
