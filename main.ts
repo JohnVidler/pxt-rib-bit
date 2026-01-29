@@ -40,10 +40,12 @@ namespace RibBit {
     }
 
     export enum Command {
-        INVALID = 0x00,
-        POWER_ENABLE = 0x01,
-        POWER_DISABLE = 0x02,
-        RESET_DEVICE = 0x03
+        INVALID        = 0x00,
+        POWER_ENABLE   = 0x01,
+        POWER_DISABLE  = 0x02,
+        RESET_DEVICE   = 0x03,
+        SPI_SELECT     = 0x04,
+        MBUS_BAUD_RATE = 0x05
     }
 
     export enum Device {
@@ -53,6 +55,53 @@ namespace RibBit {
         CAMERA = 0x03,
         LORA = 0x04,
         SD = 0x05
+    }
+
+    export enum SerialBaud {
+        //% block="300 bits per second"
+        BAUD_300    = 0x00,
+
+        //% block="600 bits per second"
+        BAUD_600    = 0x01,
+
+        //% block="1200 bits per second"
+        BAUD_1200   = 0x02,
+
+        //% block="2400 bits per second"
+        BAUD_2400   = 0x03,
+
+        //% block="4800 bits per second"
+        BAUD_4800   = 0x04,
+
+        //% block="9600 bits per second"
+        BAUD_9600   = 0x05,
+
+        //% block="14400 bits per second"
+        BAUD_14400  = 0x06,
+
+        //% block="19200 bits per second"
+        BAUD_19200  = 0x07,
+
+        //% block="28800 bits per second"
+        BAUD_28800  = 0x08,
+
+        //% block="38400 bits per second"
+        BAUD_38400  = 0x09,
+
+        //% block="57600 bits per second"
+        BAUD_57600  = 0x0a,
+
+        //% block="115200 bits per second"
+        BAUD_115200 = 0x0b,
+
+        //% block="230400 bits per second"
+        BAUD_230400 = 0x0c,
+
+        //% block="460800 bits per second"
+        BAUD_460800 = 0x0d,
+
+        //% block="921600 bits per second"
+        BAUD_921600 = 0x0e
     }
 
     export enum DayOfWeek {
@@ -124,10 +173,17 @@ namespace RibBit {
         December = 12
     }
 
-    export function ribbit_cmd(device: Device, command: Command) {
+    export function ribbit_cmd(device: Device, command: Command): void {
         const payload = Buffer.create(2)
         payload.setUint8(0, command);
         payload.setUint8(1, device);
+        pins.i2cWriteBuffer(RIBBIT_ADDRESS, payload)
+    }
+
+    export function ribbit_set_baud(baud: SerialBaud ): void {
+        const payload = Buffer.create(2)
+        payload.setUint8(0, Command.MBUS_BAUD_RATE);
+        payload.setUint8(1, baud);
         pins.i2cWriteBuffer(RIBBIT_ADDRESS, payload)
     }
 
