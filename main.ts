@@ -369,6 +369,13 @@ namespace RibBitBasics {
         return RibBit.leds;
     }
 
+    function leftPadInteger( value: number ): string {
+        value = Math.floor(value);
+        if( value < 10 && value > -1 )
+            return `0${value}`;
+        return `${value}`;
+    }
+
     //% blockId="ribbit_get_time"
     //% block="the current time"
     //% group="Time"
@@ -380,7 +387,7 @@ namespace RibBitBasics {
         let minutes = RibBit.bcdToDec(data[1]);
         let hours = RibBit.bcdToDec(data[2] & 0x3F);
 
-        return `${"0" + (hours).toString().slice(-2)}:${"0" + minutes.toString().slice(-2)}:${"0" + seconds.toString().slice(-2)}`;
+        return `${leftPadInteger(hours)}:${leftPadInteger(minutes)}:${leftPadInteger(seconds)}`;
     }
 
     //% blockId="ribbit_get_date"
