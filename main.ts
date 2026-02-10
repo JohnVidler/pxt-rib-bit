@@ -184,7 +184,7 @@ namespace RibBit {
     }
 
     export function ribbit_serial_write( device: Device, data: Buffer ) {
-        const chunks = data.chunked(16);
+        const chunks = data.chunked(14);
 
         for( let i=0; i<chunks.length; i++ ) {
             const header = Buffer.create( 2 );
