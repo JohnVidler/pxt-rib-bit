@@ -45,7 +45,8 @@ namespace RibBit {
         POWER_DISABLE  = 0x02,
         RESET_DEVICE   = 0x03,
         SPI_SELECT     = 0x04,
-        MBUS_BAUD_RATE = 0x05
+        MBUS_BAUD_RATE = 0x05,
+        SERIAL_WRITE   = 0x06
     }
 
     export enum Device {
@@ -179,7 +180,15 @@ namespace RibBit {
         const payload = Buffer.create(2)
         payload.setUint8(0, command);
         payload.setUint8(1, device);
-        pins.i2cWriteBuffer(RIBBIT_ADDRESS, payload)
+        pins.i2cWriteBuffer(RIBBIT_ADDRESS, payload);
+    }
+
+    export function ribbit_serial_write( device: Device, data: Buffer ) {
+        const header = Buffer.create( 2 );
+        header.setUint8(0, Command.SERIAL_WRITE);
+        header.setUint8(1, device); // Note that some of these may be nonsense, and will be ignored by the firmware...
+        const payload = header.concat(data);
+        pins.i2cWriteBuffer(RIBBIT_ADDRESS, payload);
     }
 
     export function ribbit_set_baud(baud: SerialBaud ): void {
