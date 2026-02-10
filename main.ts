@@ -57,6 +57,8 @@ namespace RibBit {
         SD = 0x05
     }
 
+    // Note: The values in this enum must exactly match those in the BAUD_RATES
+    // table in the RibBit firmware, else the rates won't match up.
     export enum SerialBaud {
         //% block="300 bits per second"
         BAUD_300    = 0x00,
