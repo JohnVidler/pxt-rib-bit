@@ -314,8 +314,6 @@ namespace RibBit {
                         buttonState[3] = (data.getUint8(1) & 0x08) == 0x08; // R1
                         buttonState[4] = (data.getUint8(1) & 0x10) == 0x10; // R2
                         buttonState[5] = (data.getUint8(1) & 0x20) == 0x20; // R3
-
-                        serial.writeLine( buttonState.join(", ") );
                         break;
 
                     case IRQ.GPS:
@@ -325,7 +323,8 @@ namespace RibBit {
                         break;
 
                     default:
-                        serial.writeLine(`??  ${data.toHex()}`);
+                        //serial.writeLine(`??  ${data.toHex()}`);
+                        break;
                 }
 
                 // Handle any pending events
