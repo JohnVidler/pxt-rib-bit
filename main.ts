@@ -176,11 +176,14 @@ namespace RibBit {
         December = 12
     }
 
+    export const HOST_SETTLE_US = 100;
+
     export function ribbit_cmd(device: Device, command: Command): void {
         const payload = Buffer.create(2)
         payload.setUint8(0, command);
         payload.setUint8(1, device);
         pins.i2cWriteBuffer(RIBBIT_ADDRESS, payload);
+        control.waitMicros(HOST_SETTLE_US);
     }
 
     export function ribbit_serial_write( device: Device, data: Buffer ) {
@@ -192,6 +195,7 @@ namespace RibBit {
             header.setUint8(1, device); // Note that some of these may be nonsense, and will be ignored by the firmware...
             const payload = header.concat(chunks[i]);
             pins.i2cWriteBuffer(RIBBIT_ADDRESS, payload);
+            control.waitMicros(HOST_SETTLE_US);
         }
     }
 
@@ -200,6 +204,7 @@ namespace RibBit {
         payload.setUint8(0, Command.MBUS_BAUD_RATE);
         payload.setUint8(1, baud);
         pins.i2cWriteBuffer(RIBBIT_ADDRESS, payload)
+        control.waitMicros(HOST_SETTLE_US);
     }
 
     export function bcdToDec(bcd: number): number {
@@ -396,6 +401,7 @@ namespace RibBitBasics {
     //% group="Time"
     export function getTime(): string {
         pins.i2cWriteNumber(RibBit.RIBBIT_RTC_ADDRESS, 0x00, NumberFormat.UInt8BE, true); // Seconds register
+        control.waitMicros(RibBit.HOST_SETTLE_US);
         let data = pins.i2cReadBuffer(RibBit.RIBBIT_RTC_ADDRESS, 3)
 
         let seconds = RibBit.bcdToDec(data[0]);
@@ -410,6 +416,7 @@ namespace RibBitBasics {
     //% group="Time"
     export function getDate(): string {
         pins.i2cWriteNumber(RibBit.RIBBIT_RTC_ADDRESS, 0x04, NumberFormat.UInt8BE, true); // Date register
+        control.waitMicros(RibBit.HOST_SETTLE_US);
         let data = pins.i2cReadBuffer(RibBit.RIBBIT_RTC_ADDRESS, 3)
 
         let date = RibBit.bcdToDec(data[0]);
@@ -424,6 +431,7 @@ namespace RibBitBasics {
     //% group="Time"
     export function getDayOfWeek(): string {
         pins.i2cWriteNumber(RibBit.RIBBIT_RTC_ADDRESS, 0x03, NumberFormat.UInt8BE, true); // Days register
+        control.waitMicros(RibBit.HOST_SETTLE_US);
         let day = pins.i2cReadNumber(RibBit.RIBBIT_RTC_ADDRESS, NumberFormat.UInt8BE);
 
         return RibBit.dayToString(day & 0x07);
@@ -435,6 +443,7 @@ namespace RibBitBasics {
     //% advanced="true"
     export function getHour(): number {
         pins.i2cWriteNumber(RibBit.RIBBIT_RTC_ADDRESS, 0x02, NumberFormat.UInt8BE, true); // Hours register
+        control.waitMicros(RibBit.HOST_SETTLE_US);
         return RibBit.bcdToDec(pins.i2cReadNumber(RibBit.RIBBIT_RTC_ADDRESS, NumberFormat.UInt8BE) & 0x3F);
     }
 
@@ -453,6 +462,7 @@ namespace RibBitBasics {
     //% advanced="true"
     export function getSecond(): number {
         pins.i2cWriteNumber(RibBit.RIBBIT_RTC_ADDRESS, 0x00, NumberFormat.UInt8BE, true); // Seconds register
+        control.waitMicros(RibBit.HOST_SETTLE_US);
         return RibBit.bcdToDec(pins.i2cReadNumber(RibBit.RIBBIT_RTC_ADDRESS, NumberFormat.UInt8BE));
     }
 
@@ -462,6 +472,7 @@ namespace RibBitBasics {
     //% advanced="true"
     export function getYear(): number {
         pins.i2cWriteNumber(RibBit.RIBBIT_RTC_ADDRESS, 0x06, NumberFormat.UInt8BE, true); // Years register
+        control.waitMicros(RibBit.HOST_SETTLE_US);
         return 2000 + RibBit.bcdToDec(pins.i2cReadNumber(RibBit.RIBBIT_RTC_ADDRESS, NumberFormat.UInt8BE));
     }
 
@@ -471,6 +482,7 @@ namespace RibBitBasics {
     //% advanced="true"
     export function getMonth(): RibBit.Month {
         pins.i2cWriteNumber(RibBit.RIBBIT_RTC_ADDRESS, 0x05, NumberFormat.UInt8BE, true); // Months register
+        control.waitMicros(RibBit.HOST_SETTLE_US);
         return RibBit.bcdToDec(pins.i2cReadNumber(RibBit.RIBBIT_RTC_ADDRESS, NumberFormat.UInt8BE));
     }
 
@@ -480,6 +492,7 @@ namespace RibBitBasics {
     //% advanced="true"
     export function getDayOfMonth(): number {
         pins.i2cWriteNumber(RibBit.RIBBIT_RTC_ADDRESS, 0x04, NumberFormat.UInt8BE, true); // Hours register
+        control.waitMicros(RibBit.HOST_SETTLE_US);
         return RibBit.bcdToDec(pins.i2cReadNumber(RibBit.RIBBIT_RTC_ADDRESS, NumberFormat.UInt8BE));
     }
 
@@ -508,6 +521,7 @@ namespace RibBitBasics {
             RibBit.decToBcd(hour) & 0x3F           // 24-hour mode
         ]);
         pins.i2cWriteBuffer(RibBit.RIBBIT_RTC_ADDRESS, buf)
+        control.waitMicros(RibBit.HOST_SETTLE_US);
     }
 
     //% blockId="ribbit_set_date"
@@ -523,6 +537,7 @@ namespace RibBitBasics {
             RibBit.decToBcd(year - 2000)
         ]);
         pins.i2cWriteBuffer(RibBit.RIBBIT_RTC_ADDRESS, buf);
+        control.waitMicros(RibBit.HOST_SETTLE_US);
     }
 
     //% blockId="ribbit_set_day_of_week"
@@ -535,6 +550,7 @@ namespace RibBitBasics {
             RibBit.decToBcd(day)
         ]);
         pins.i2cWriteBuffer(RibBit.RIBBIT_RTC_ADDRESS, buf);
+        control.waitMicros(RibBit.HOST_SETTLE_US);
     }
 
     //% blockId="ribbit_read_temperature"
@@ -547,6 +563,7 @@ namespace RibBitBasics {
 
         // Tell the RTC we want to read from 0x11
         pins.i2cWriteNumber(RibBit.RIBBIT_RTC_ADDRESS, TEMP_MSB, NumberFormat.UInt8BE, true)
+        control.waitMicros(RibBit.HOST_SETTLE_US);
 
         // Read two bytes
         let buf = pins.i2cReadBuffer(RibBit.RIBBIT_RTC_ADDRESS, 2)
