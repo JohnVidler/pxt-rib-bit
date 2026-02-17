@@ -62,6 +62,7 @@ namespace RibBit {
 
     export enum Register {
         VERSION = 0xff,
+        TEST = 0x00,
         LORA_TXRX = 0x05
     }
 
@@ -190,6 +191,7 @@ namespace RibBit {
         const payload = Buffer.create(1);
         payload.setUint8(0, reg);
         pins.i2cWriteBuffer(RIBBIT_ADDRESS, payload, true);
+        control.waitMicros(HOST_SETTLE_US);
         const data = pins.i2cReadBuffer(RIBBIT_ADDRESS, 1, false);
         return data.getUint8(0);
     }
@@ -267,17 +269,29 @@ namespace RibBit {
 
     // Neopixel Configuration
     export const leds = neopixel.create(DigitalPin.P16, 6, NeoPixelMode.RGB);
-    leds.setBrightness(64);
     leds.clear();
-    leds.show();
+
+    let isConnected = false;
+
+    function ioSetup() {
+        serial.writeLine("Connected!");
+        leds.setBrightness(64);
+        leds.show();
+    }
 
     pins.setPull(IRQPin, PinPullMode.PullUp);
     control.inBackground(() => {
         while (true) {
-
-            // Check we're actually plugged in!
-            if( reg_read( Register.VERSION ) == 0 ) {
-                control.panic( 909 );
+            const board_version = reg_read(Register.VERSION);
+            if( isConnected ) {
+                if (board_version == 0) // Lost connection!
+                    isConnected = false;
+            }
+            else {
+                if( board_version != 0){ // Regained connection!
+                    ioSetup();
+                    isConnected = true;
+                }
             }
 
             // Do we have any pending interrupts?
