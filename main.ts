@@ -263,7 +263,6 @@ namespace RibBit {
     export let __nmeaString: ( text: string ) => void = () => {};
 
     // Internal States
-    const _powerState        = [ true, true, false, false, false, true ];  // Offsets map to the Device enum
     const _oldButtonState    = [ false, false, false, false, false, false ]; // Offsets map to the Button enum
     export const buttonState = [ false, false, false, false, false, false ]; // Offsets map to the Button enum
 
@@ -274,12 +273,21 @@ namespace RibBit {
     let isConnected = false;
 
     function ioSetup() {
-        serial.writeLine("Connected!");
+        ribbit_cmd(Device.GPS, Command.POWER_DISABLE);
+        ribbit_cmd(Device.MBUS, Command.POWER_DISABLE);
+        ribbit_cmd(Device.CAMERA, Command.POWER_DISABLE);
+        ribbit_cmd(Device.LORA, Command.POWER_DISABLE);
+        ribbit_cmd(Device.SD, Command.POWER_DISABLE);
+
         leds.setBrightness(64);
         leds.show();
+
+        pins.setPull(IRQPin, PinPullMode.PullUp);
     }
 
-    pins.setPull(IRQPin, PinPullMode.PullUp);
+    // Initial setup
+    ioSetup();
+
     control.inBackground(() => {
         while (true) {
             const board_version = reg_read(Register.VERSION);
