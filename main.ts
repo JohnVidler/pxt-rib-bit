@@ -46,16 +46,23 @@ namespace RibBit {
         RESET_DEVICE   = 0x03,
         SPI_SELECT     = 0x04,
         MBUS_BAUD_RATE = 0x05,
-        SERIAL_WRITE   = 0x06
+        SERIAL_WRITE   = 0x06,
+        REGISTER_WRITE = 0x07
     }
 
     export enum Device {
-        INVALID = 0x00,
-        GPS = 0x01,
-        MBUS = 0x02,
-        CAMERA = 0x03,
-        LORA = 0x04,
-        SD = 0x05
+        INVALID   = 0x00,
+        GPS       = 0x01,
+        MBUS      = 0x02,
+        CAMERA    = 0x03,
+        LORA      = 0x04,
+        LORA_TXRX = 0x05,
+        SD        = 0x06
+    }
+
+    export enum Register {
+        VERSION = 0xff,
+        LORA_TXRX = 0x05
     }
 
     // Note: The values in this enum must exactly match those in the BAUD_RATES
@@ -176,10 +183,28 @@ namespace RibBit {
         December = 12
     }
 
+    // Tunable for i2c delay, as we don't have a i2c 'ready' line
     export const HOST_SETTLE_US = 100;
 
+    export function reg_read( reg: Register ): number {
+        const payload = Buffer.create(1);
+        payload.setUint8(0, reg);
+        pins.i2cWriteBuffer(RIBBIT_ADDRESS, payload, true);
+        const data = pins.i2cReadBuffer(RIBBIT_ADDRESS, 1, false);
+        return data.getUint8(0);
+    }
+
+    export function reg_write( reg: Register, value: number ): void {
+        const payload = Buffer.create(3);
+        payload.setUint8(0, Command.REGISTER_WRITE);
+        payload.setUint8(1, reg);
+        payload.setUint8(2, value);
+        pins.i2cWriteBuffer(RIBBIT_ADDRESS, payload);
+        control.waitMicros(HOST_SETTLE_US);
+    }
+
     export function ribbit_cmd(device: Device, command: Command): void {
-        const payload = Buffer.create(2)
+        const payload = Buffer.create(2);
         payload.setUint8(0, command);
         payload.setUint8(1, device);
         pins.i2cWriteBuffer(RIBBIT_ADDRESS, payload);
@@ -249,6 +274,12 @@ namespace RibBit {
     pins.setPull(IRQPin, PinPullMode.PullUp);
     control.inBackground(() => {
         while (true) {
+
+            // Check we're actually plugged in!
+            if( reg_read( Register.VERSION ) == 0 ) {
+                control.panic( 909 );
+            }
+
             // Do we have any pending interrupts?
             if (pins.digitalReadPin(IRQPin) == 0) {
                 const data = pins.i2cReadBuffer(RIBBIT_ADDRESS, 16);
