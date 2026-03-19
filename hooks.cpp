@@ -4,13 +4,14 @@ using namespace pxt;
 
 namespace RibBit {
 
-  bool isUsbPowered() {
-    #if MICROBIT_CODAL
-      static NRF52Pin vusbPin(MICROBIT_PIN_VUSB);
-      return vusbPin.getDigitalValue() == 1;
-    #else
-      return false;
-    #endif
-  }
+    //%
+    bool isUsbPowered() {
+        #if MICROBIT_CODAL
+            static NRF52Pin vusbPin(MICROBIT_PIN_VUSB);
+            return vusbPin.getDigitalValue() == 1;
+        #else
+            return false;
+        #endif
+    }
 
 }
