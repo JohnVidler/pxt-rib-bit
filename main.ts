@@ -242,6 +242,11 @@ namespace RibBit {
         return ((Math.idiv(dec, 10) << 4) | (dec % 10))
     }
 
+    //% shim=ribbit::isUsbPowered
+    export function isUsbPowered(): boolean {
+        return false
+    }
+
     export function dayToString( day: number = 1 ): string {
         switch( day ) {
             case DayOfWeek.Monday:    return "Monday";
@@ -344,7 +349,7 @@ namespace RibBit {
                 }
             }
 
-            basic.pause(10);
+            basic.pause(50);
         }
     });
 }
