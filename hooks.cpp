@@ -17,6 +17,7 @@ namespace RibBit {
         #endif
     }
 
+    //%
     bool isCODAL() {
         #if MICROBIT_CODAL
             return true;
