@@ -11,7 +11,7 @@
     "files": [
         "README.md",
         "main.ts",
-        "edge_serial.cpp",
+        "hooks.cpp",
         "shims.d.ts",
         "enums.d.ts"
     ],
