@@ -244,7 +244,12 @@ namespace RibBit {
 
     //% shim=RibBit::isUsbPowered
     export function isUsbPowered(): boolean {
-        return false
+        return false;
+    }
+
+    //% shim=RibBit::isCODAL
+    export function isCODAL(): boolean {
+        return false;
     }
 
     export function dayToString( day: number = 1 ): string {
