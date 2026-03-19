@@ -7,11 +7,7 @@ namespace RibBit {
     //%
     bool isUsbPowered() {
         #if MICROBIT_CODAL
-            #ifndef MICROBIT_PIN_VUSB
-                #define MICROBIT_PIN_VUSB 34
-            #endif
-            static NRF52Pin vusbPin(DEVICE_ID_IO_P0 + MICROBIT_PIN_VUSB, MICROBIT_PIN_VUSB, PIN_CAPABILITY_DIGITAL);
-            return vusbPin.getDigitalValue() == 1;
+            return uBit.power.isUSBConnected();
         #else
             return false;
         #endif
