@@ -11,9 +11,7 @@
     "files": [
         "README.md",
         "main.ts",
-        "hooks.cpp",
-        "shims.d.ts",
-        "enums.d.ts"
+        "hooks.cpp"
     ],
     "testFiles": [
         "test.ts"
