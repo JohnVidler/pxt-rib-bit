@@ -1,4 +1,5 @@
 #include "pxt.h"
+#include "MicroBitPowerManager.h"
 
 using namespace pxt;
 
@@ -6,8 +7,9 @@ namespace RibBit {
 
     //%
     bool isUsbPowered() {
+        MicroBitPowerSource source = uBit.power.getPowerSource();
         #if MICROBIT_CODAL
-            return uBit.power.isUSBConnected();
+            return (source == MicroBitPowerSource.PWR_USB_ONLY || source == MicroBitPowerSource.PWR_USB_AND_BATT);
         #else
             return false;
         #endif
