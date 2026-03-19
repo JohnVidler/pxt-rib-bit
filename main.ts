@@ -242,7 +242,7 @@ namespace RibBit {
         return ((Math.idiv(dec, 10) << 4) | (dec % 10))
     }
 
-    //% shim=ribbit::isUsbPowered
+    //% shim=RibBit::isUsbPowered
     export function isUsbPowered(): boolean {
         return false
     }
