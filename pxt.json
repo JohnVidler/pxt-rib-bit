@@ -10,7 +10,10 @@
     },
     "files": [
         "README.md",
-        "main.ts"
+        "main.ts",
+        "edge_serial.cpp",
+        "shims.d.ts",
+        "enums.d.ts"
     ],
     "testFiles": [
         "test.ts"
