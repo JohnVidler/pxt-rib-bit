@@ -1,10 +1,8 @@
-#pragma once;
-
 #include "pxt.h"
 
 using namespace pxt;
 
-namespace RibBit {
+namespace ribbit {
 
   bool isUsbPowered() {
     #if MICROBIT_CODAL
