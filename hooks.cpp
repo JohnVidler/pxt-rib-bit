@@ -9,7 +9,7 @@ namespace RibBit {
     bool isUsbPowered() {
         MicroBitPowerSource source = uBit.power.getPowerSource();
         #if MICROBIT_CODAL
-            return (source == MicroBitPowerSource.PWR_USB_ONLY || source == MicroBitPowerSource.PWR_USB_AND_BATT);
+            return source == PWR_USB_ONLY || source == PWR_USB_AND_BATT;
         #else
             return false;
         #endif
