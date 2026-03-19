@@ -4,7 +4,7 @@
 
 using namespace pxt;
 
-namespace ribbit {
+namespace RibBit {
 
   bool isUsbPowered() {
     #if MICROBIT_CODAL
