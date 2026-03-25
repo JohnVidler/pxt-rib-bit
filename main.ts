@@ -300,6 +300,7 @@ namespace RibBit {
 
     control.inBackground(() => {
         while (true) {
+            // Safety and Startup
             const board_version = reg_read(Register.VERSION);
             if( isConnected ) {
                 if (board_version == 0) // Lost connection!
@@ -310,6 +311,13 @@ namespace RibBit {
                     ioSetup();
                     isConnected = true;
                 }
+            }
+
+            // V1 Overcurrent support
+            if( board_version < 5 ) {
+                let timeout = 1000;
+                while ( RibBit.leds.power() > 1000 && timeout-- > 0 )
+                    RibBit.leds.setBrightness( Math.clamp( 0, 255, RibBit.leds.brightness - 1 ) );
             }
 
             // Do we have any pending interrupts?
