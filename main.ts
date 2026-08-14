@@ -35,8 +35,11 @@ namespace RibBit {
         BUTTON = 0x01,
         GPS = 0x02,
         MBUS = 0x04,
-        CAMERA = 0x08,
-        LORA = 0x10
+        MBUS_INT = 0x08,
+        MBUS_RESET = 0x10,
+        MBUS_SERIAL = 0x20,
+        CAMERA = 0x40,
+        LORA = 0x80
     }
 
     export enum Command {
@@ -61,9 +64,10 @@ namespace RibBit {
     }
 
     export enum Register {
-        VERSION = 0xff,
-        TEST = 0x00,
-        LORA_TXRX = 0x05
+        VERSION = 0x01,
+        TEST = 0x01,
+        LORA_TXRX = 0x05,
+        MBUS_SERIAL_DATA = 0x0D
     }
 
     // Note: The values in this enum must exactly match those in the BAUD_RATES
@@ -190,19 +194,22 @@ namespace RibBit {
     export function reg_read( reg: Register ): number {
         const payload = Buffer.create(1);
         payload.setUint8(0, reg);
-        pins.i2cWriteBuffer(RIBBIT_ADDRESS, payload, true);
+        pins.i2cWriteBuffer(RIBBIT_ADDRESS, payload, false);
         control.waitMicros(HOST_SETTLE_US);
         const data = pins.i2cReadBuffer(RIBBIT_ADDRESS, 1, false);
         return data.getUint8(0);
     }
 
-    export function reg_write( reg: Register, value: number ): void {
-        const payload = Buffer.create(3);
-        payload.setUint8(0, Command.REGISTER_WRITE);
-        payload.setUint8(1, reg);
-        payload.setUint8(2, value);
+    export function reg_write_buffer(reg: Register, buffer: Buffer): void {
+        const payload = Buffer.create(buffer.length + 1);
+        payload.setUint8( 0, reg );
+        payload.write( 1, buffer )
         pins.i2cWriteBuffer(RIBBIT_ADDRESS, payload);
         control.waitMicros(HOST_SETTLE_US);
+    }
+
+    export function reg_write( reg: Register, value: number ): void {
+        reg_write_buffer( reg, Buffer.fromArray( [value] ) );
     }
 
     export function ribbit_cmd(device: Device, command: Command): void {
@@ -213,7 +220,7 @@ namespace RibBit {
         control.waitMicros(HOST_SETTLE_US);
     }
 
-    export function ribbit_serial_write( device: Device, data: Buffer ) {
+    /*export function ribbit_serial_write( device: Device, data: Buffer ) {
         const chunks = data.chunked(14);
 
         for( let i=0; i<chunks.length; i++ ) {
@@ -232,7 +239,7 @@ namespace RibBit {
         payload.setUint8(1, baud);
         pins.i2cWriteBuffer(RIBBIT_ADDRESS, payload)
         control.waitMicros(HOST_SETTLE_US);
-    }
+    }*/
 
     export function bcdToDec(bcd: number): number {
         return ((bcd >> 4) * 10) + (bcd & 0x0F)
@@ -298,7 +305,23 @@ namespace RibBit {
     // Initial setup
     ioSetup();
 
-    control.inBackground(() => {
+    basic.forever(function () {
+        const board_version = reg_read(Register.VERSION);
+        if (isConnected) {
+            if (board_version == 0) // Lost connection!
+                isConnected = false;
+        }
+        else {
+            if (board_version != 0) { // Regained connection!
+                ioSetup();
+                isConnected = true;
+            }
+        }
+        
+        basic.pause(5000);
+    });
+
+    /*control.inBackground(() => {
         while (true) {
             // Safety and Startup
             const board_version = reg_read(Register.VERSION);
@@ -337,7 +360,9 @@ namespace RibBit {
                     case IRQ.GPS:
                         const length = data.getUint8(1);
                         const text = data.slice(2, 2 + length).toString();
-                        try { __nmeaString(text); } catch( err ) { /* ignore any handler errors */ }
+                        try { __nmeaString(text); } catch( err ) {
+                            // ignore any handler errors
+                        }
                         break;
 
                     default:
@@ -364,7 +389,7 @@ namespace RibBit {
 
             basic.pause(50);
         }
-    });
+    });*/
 }
 
 //% block="Rib:Bit Basics"
